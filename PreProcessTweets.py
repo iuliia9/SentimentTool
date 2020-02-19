@@ -10,6 +10,7 @@ from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.text import Tokenizer
 from keras.layers import Dense, Embedding, GRU, LSTM, SpatialDropout1D
+import h5py
 
 # create column names for dataframes
 colnames=['id', 'text', 'label', 'company']
@@ -74,6 +75,7 @@ def max_tweet_length():
             max_length = len(sequences[i])
     return max_length
 num_char = max_tweet_length()
+print(num_char, ' number')
 maxlength = num_char
 padded_X = pad_sequences(sequences, padding='post', maxlen=maxlength)
 # Convert labels
@@ -102,7 +104,7 @@ for word, i in t.word_index.items():
         embedding_matrix[i] = embedding_vector
 
 embedding_layer = Embedding(input_dim=vocab_size, output_dim=100, weights=[embedding_matrix],
-                           input_length = tweet_num, trainable=False)
+                           input_length = num_char, trainable=False)
 
 # create our model
 lstm_mod1 = Sequential()
@@ -233,3 +235,16 @@ plot_confusion_matrix(y_test_array, y_pred_array, classes=class_names, normalize
                       title='Normalized confusion matrix')
 # print plot
 plt.show()
+
+# serialize to JSON
+json_file = lstm_mod1.to_json()
+with open("model.json", "w") as file:
+   file.write(json_file)
+# serialize weights to HDF5
+lstm_mod1.save_weights("model_weights.hdf5")
+
+
+import pickle
+
+with open('tokenizer.pickle', 'wb') as handle:
+    pickle.dump(t, handle, protocol=pickle.HIGHEST_PROTOCOL)
