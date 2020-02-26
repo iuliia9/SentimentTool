@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 from keras.preprocessing.text import Tokenizer
 from keras.layers import Dense, Embedding, GRU, LSTM, SpatialDropout1D
 import h5py
-
 # create column names for dataframes
 colnames=['id', 'text', 'label', 'company']
 aircolnames=['tweet_id','label','airline_sentiment_confidence','negativereason',
@@ -106,7 +105,7 @@ for word, i in t.word_index.items():
 embedding_layer = Embedding(input_dim=vocab_size, output_dim=100, weights=[embedding_matrix],
                            input_length = num_char, trainable=False)
 
-# create our model
+# create model
 lstm_mod1 = Sequential()
 lstm_mod1.add(embedding_layer)
 lstm_mod1.add(LSTM(30,
