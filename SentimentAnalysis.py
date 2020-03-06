@@ -1,10 +1,12 @@
 from keras.models import model_from_json
 import pickle
+import matplotlib.pyplot as plt
 import re
 import pandas as pd
 import tweepy
+import numpy as np
 from keras.preprocessing.sequence import pad_sequences
-
+import collections
 
 def main(keyword):
     # load json and create model
@@ -28,19 +30,22 @@ def main(keyword):
     df_tweets = pd.DataFrame(columns = ['text'])
     # get tweets
     tweet_list =[];
+    tweet_time=[];
     for tweet_info in tweepy.Cursor(api.search, q=search_word, lang = "en",
                                     tweet_mode="extended").items(100):
         if "retweeted_status" in dir(tweet_info):
             tweet=tweet_info.retweeted_status.full_text
             tweet_list.append(tweet)
+            tweet_time.append(tweet_info.created_at)
         else:
             tweet=tweet_info.full_text
             tweet_list.append(tweet)
+            tweet_time.append(tweet_info.created_at)
     # get text of tweets
     for tweet in tweet_list:
         add_tweet = [tweet]
         df_tweets.loc[len(df_tweets)] = add_tweet
-
+    print(tweet_time)
     # save dataframe to csv
     df_tweets.to_csv('result.csv')
 
@@ -59,9 +64,31 @@ def main(keyword):
     pred = loaded_model.predict_classes(padded)
     # print all predicted values
     print(pred)
+    # add sentiment scores to the dataframe
+    df_tweets['sentiment']=pred
+    df_tweets.to_csv('scored.csv')
     # print predictions after tweets
-    for i in range(100):
-        print((df_tweets['text'])[i], pred[i])
+    # for i in range(100):
+    #     print((df_tweets['text'])[i], pred[i])
+    counter = collections.Counter(pred)
+    print(counter)
+    plot_bar_chart(counter)
+    # print(counter[0])
+    # print(counter[1])
+    # print(counter[2])
+
+
+
+def plot_bar_chart(counter):
+    label=['Negative', 'Positive', 'Neutral']
+    sentiment = [counter[0], counter[1], counter[2]]
+    index = np.arange(len(label))
+    plt.bar(index, sentiment, color=['red', 'green', 'blue'])
+    plt.xlabel('Sentiment', fontsize=5)
+    plt.ylabel('Number of tweets', fontsize=5)
+    plt.xticks(index, label, fontsize=5, rotation=30)
+    plt.title('Sentiment Analysis')
+    plt.show()
 
 
 def preprocess_text(sen):

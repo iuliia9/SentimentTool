@@ -2,7 +2,7 @@ import tkinter as tk
 import SentimentAnalysis
 
 def get_input():
-    keyword = entry.get();
+    keyword = entry.get()
     print(keyword)
     # m.destroy()
     SentimentAnalysis.main(keyword)
