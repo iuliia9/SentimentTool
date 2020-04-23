@@ -3,10 +3,7 @@ import SentimentAnalysis
 
 def get_input():
     keyword = entry.get()
-    print(keyword)
-    # m.destroy()
     SentimentAnalysis.main(keyword)
-
 
 m = tk.Tk()
 m.title('Sentiment Tool')
