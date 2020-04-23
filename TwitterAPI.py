@@ -1,12 +1,11 @@
 import twitter
-# initialize api instance
+
+
+# twitter api - put twitter tokens in ' '
 twitter_api = twitter.Api(consumer_key='',
                         consumer_secret='',
                         access_token_key='',
                         access_token_secret='')
-# test authentication
-print(twitter_api.VerifyCredentials())
-
 
 def buidTrainingSet(corpusFile, tweetDataFile):
     import csv
@@ -33,7 +32,7 @@ def buidTrainingSet(corpusFile, tweetDataFile):
             time.sleep(sleep_time)
         except:
             continue
-    # now write to the empty CSV file
+    # write to the empty CSV file
     with open(tweetDataFile, 'w') as csvfile:
         linewriter = csv.writer(csvfile, delimiter=',', quotechar="\"")
         for tweet in trainingDataSet:
@@ -44,5 +43,6 @@ def buidTrainingSet(corpusFile, tweetDataFile):
     return trainingDataSet
 
 corpusFile = "corpus.csv"
+# csv file the dataset will be downloaded into
 tweetDataFile = "tweetDataFile.csv"
 trainingData = buidTrainingSet(corpusFile, tweetDataFile)
