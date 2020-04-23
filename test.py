@@ -8,11 +8,8 @@ import plotly.graph_objs as go
 import sqlite3
 import collections
 import tweepy
-import os.path
 from os import path
-from keras.preprocessing.text import text_to_word_sequence
 import re
-import json
 import keras.backend.tensorflow_backend as tb
 
 app = dash.Dash(__name__)
@@ -20,7 +17,7 @@ app.layout = html.Div([
 html.H1("Sentiment Analysis", style={"textAlign": "center"}),
     # Dividing the dashboard in tabs
     dcc.Tabs(id="tabs", children=[
-# Defining the layout of the first Tab
+    # Defining the layout of the first Tab
         dcc.Tab(label='Quick Analysis', children=[
             html.Div([
                 html.H1("Quick Static Sentiment",
@@ -42,7 +39,7 @@ html.H1("Sentiment Analysis", style={"textAlign": "center"}),
                 ]),
 ]),
 
-
+# Defining the layout of the second Tab
         dcc.Tab(label='Live Anaysis', children=[
                 html.H1("Live Sentiment",
                             style={"textAlign": "center"}),
@@ -68,6 +65,7 @@ html.H1("Sentiment Analysis", style={"textAlign": "center"}),
         ])
     ])
 
+# average sentiment score for the static charts
 @app.callback(
     Output('result', 'children'),
     [Input('res-update', 'n_intervals')]
@@ -77,13 +75,10 @@ def update_result(n):
         df = pd.read_csv("scored.csv")
         total = df["sentiment"].sum()
         rows = len(df.index)
-        print(rows)
         res = total/rows
         return "Average Sentiment Score is: {}".format(res)
     else:
         return "No Score to Display"
-
-
 
 
 
@@ -102,6 +97,7 @@ def update_div(n_clicks, input_value):
 def update_div(n_clicks, input_value):
     return input_value
 
+# average sentiment score for the life graph
 @app.callback(
     Output('result2', 'children'),
     [Input('res-update2', 'n_intervals'),
@@ -113,6 +109,7 @@ def update_result(n, sentiment_term2):
         df = pd.read_sql("SELECT * FROM sentiment WHERE tweet LIKE ? ORDER BY unix DESC LIMIT 2000",
                          conn, params=('%' + sentiment_term2 + '%',))
         total = sum(df.sentiment.values[-100:])
+        # number of tweets in case less than 100
         num = len((df.sentiment.values[-100:]))
         res = total/num
         return "Average Sentiment Score is: {:.1f}".format(res)
@@ -127,13 +124,11 @@ def update_graph_scatter(n, sentiment_term2):
         c = conn.cursor()
         df = pd.read_sql("SELECT * FROM sentiment WHERE tweet LIKE ? ORDER BY unix DESC LIMIT 2000",
                          conn ,params=('%' + sentiment_term2 + '%',))
-
         df.sort_values('unix', inplace=True)
         df['date'] = pd.to_datetime(df['unix'], unit='ms')
         df.set_index('date', inplace=True)
         df.dropna(inplace=True)
         X = df.index[-100:]
-            # df.unix.values[-200:]
         Y = df.sentiment.values[-100:]
         if (df.empty == False):
             data = plotly.graph_objs.Scatter(
@@ -216,10 +211,7 @@ def update_static_pie_chart(sentiment_term):
 
 def update_graph_scatter(sentiment_term):
     if (path.exists("scored.csv")):
-        colnames = ['text', 'time', 'sentiment']
         df = pd.read_csv("scored.csv")
-        # print(df.head())
-        # df['sen'] = df.apply(lambda row: float(row['sentiment']), axis=1)
         X = df.time
         Y = df.sentiment
         if (df.empty == False):
@@ -257,6 +249,7 @@ def preprocess_text(sen):
 
 def static_analysis(sentiment):
     tb._SYMBOLIC_SCOPE.value = True
+    # load saved model
     file = open("model.json", 'r')
     model_json = file.read()
     file.close()
@@ -265,8 +258,11 @@ def static_analysis(sentiment):
     loaded_model = model_from_json(model_json)
     # load weights
     loaded_model.load_weights("model_weights.hdf5")
+    # load tokenizer
     with open('tokenizer.pickle', 'rb') as handle:
         loaded_tokenizer = pickle.load(handle)
+
+    # Twitter API tokens
     auth = tweepy.OAuthHandler('consumer_key', 'consumer_secret')
     auth.set_access_token('access_token_key',
                           'access_token_secret')
@@ -287,25 +283,11 @@ def static_analysis(sentiment):
             tweet = tweet_info.full_text
             tweet_list.append(tweet)
             tweet_time.append(tweet_info.created_at)
-        # get text of tweets
-    # for tweet in tweet_list:
-    #     add_tweet = [tweet]
-    #     df_tweets.loc[len(df_tweets)] = add_tweet
     df_tweets["text"] = tweet_list
     df_tweets["time"] = tweet_time
-
-    # for time in tweet_time:
-    #     add_tweet = [time]
-    #     df_tweets["time"].loc[len(df_tweets)] = add_tweet
-        # save dataframe to csv
-    # df_tweets.sort_values('unix', inplace=True)
-    # df_tweets['date'] = pd.to_datetime(df_tweets['unix'], unit='ms')
-    # df_tweets.set_index('date', inplace=True)
-    # df_tweets.dropna(inplace=True)
     df_tweets.to_csv('result.csv')
-    #     # preprocessing
+    # preprocessing
     df_tweets['text'] = df_tweets['text'].apply(lambda x: x.lower())
-    #
     X = []
     sentences = list(df_tweets['text'])
     for sen in sentences:
