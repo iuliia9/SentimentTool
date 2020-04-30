@@ -5,8 +5,8 @@ import twitter
 twitter_api = twitter.Api(consumer_key='',
                         consumer_secret='',
                         access_token_key='',
-                        access_token_secret='')
-
+                         access_token_secret='')
+# https://towardsdatascience.com/creating-the-twitter-sentiment-analysis-program-in-python-with-naive-bayes-classification-672e5589a7ed
 def buidTrainingSet(corpusFile, tweetDataFile):
     import csv
     import time

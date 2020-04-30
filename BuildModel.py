@@ -1,3 +1,6 @@
+# some tutorials were used to learn how to implement an lstm model
+# https://stackabuse.com/python-for-nlp-movie-sentiment-analysis-using-deep-learning-in-keras/
+# https://medium.com/@francesca_lim/twitter-u-s-airline-sentiment-analysis-using-keras-and-rnns-1956f42294ef
 import re
 import numpy as np
 from tensorflow.keras.utils import to_categorical
