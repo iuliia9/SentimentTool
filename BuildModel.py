@@ -1,4 +1,4 @@
-# some tutorials were used to learn how to implement an lstm model
+# tutorials were used to learn how to implement an lstm model
 # https://stackabuse.com/python-for-nlp-movie-sentiment-analysis-using-deep-learning-in-keras/
 # https://medium.com/@francesca_lim/twitter-u-s-airline-sentiment-analysis-using-keras-and-rnns-1956f42294ef
 import re
@@ -43,21 +43,27 @@ tweets = tweets[tweets.label != "irrelevant"]
 # print(tweets[ tweets['label'] == 'neutral'].size)
 
 # data preprocessing
+# to lower characters
 tweets['text'] = tweets['text'].apply(lambda x: x.lower())
-def preprocess_text(sen):
-    sentence = re.sub("@[\w]*", '', sen)
-    # Remove punctuations and numbers
-    sentence = re.sub('[^a-zA-Z]', ' ', sentence)
-    # Single character removal
-    sentence = re.sub(r"\s+[a-zA-Z]\s+", ' ', sentence)
-    # Removing multiple spaces
-    sentence = re.sub(r'\s+', ' ', sentence)
-    return sentence
+def preprocess(tweet):
+    # define patterns
+
+    # anything that is not alphabetic characters
+    replace = re.compile('[^a-z]')
+    # multiple spaces
+    multipleSpaces = re.compile('\s+')
+    # single letters, like 'a'
+    singleLetter = re.compile(r"\b[a-z]\b")
+    # replace matched patterns with a space
+    tweet = replace.sub(' ', tweet)
+    tweet = singleLetter.sub(' ', tweet)
+    tweet = multipleSpaces.sub(' ', tweet)
+    return tweet
 
 X = []
-sentences = list(tweets['text'])
-for sen in sentences:
-    X.append(preprocess_text(sen))
+tweetsText = list(tweets['text'])
+for tweet in tweetsText:
+    X.append(preprocess(tweet))
 
 # sentiment labels
 y = tweets['label']
@@ -121,10 +127,27 @@ lstm_model.add(LSTM(30, dropout = 0.5, recurrent_dropout = 0.5))
 lstm_model.add(Dense(3, activation='softmax'))
 lstm_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
 
+# introduce early early_stopping
+# wait for 10 epochs before stopping in case the model improves
+from keras.callbacks import EarlyStopping
+early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+
 # train model
 hist = lstm_model.fit(X_train, y_train,
                       validation_split = 0.2,
-                      epochs=200, batch_size=256, verbose=1)
+                      epochs=200, batch_size=256, verbose=1, callbacks=[early_stopping])
+
+# saving the model
+# serialize model to JSON
+json_file = lstm_model.to_json()
+with open("model.json", "w") as file:
+   file.write(json_file)
+# # serialize model weights to HDF5
+lstm_model.save_weights("model_weights.hdf5")
+# save tokenizer
+import pickle
+with open('tokenizer.pickle', 'wb') as handle:
+     pickle.dump(t, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # get training accuracy
 loss, accuracy = lstm_model.evaluate(X_train, y_train, verbose=1)
@@ -133,27 +156,26 @@ print("Training Accuracy: {:.4f}".format(accuracy))
 loss, accuracy = lstm_model.evaluate(X_test, y_test, verbose=1)
 print("Testing Accuracy:  {:.4f}".format(accuracy))
 
-# plot train vs test loss and accuracy
-acc = hist.history['acc']
-val_acc = hist.history['val_acc']
-loss = hist.history['loss']
-val_loss = hist.history['val_loss']
-epochs = range(len(acc))
-plt.plot(epochs, acc, 'g', label='Training accuracy')
-plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-plt.title('Training and Validation Accuracy')
-plt.legend()
-plt.figure()
-
-plt.plot(epochs, loss, 'g', label='Training loss')
-plt.plot(epochs, val_loss, 'b', label='Validation loss')
-plt.title('Training and Validation loss')
-plt.legend()
-
+# plot train vs test accuracy
+plt.plot(hist.history['acc'])
+plt.plot(hist.history['val_acc'])
+plt.title('Training Accuracy vs. Testing Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Training accuracy', 'Testing accuracy'], loc='lower right')
+plt.show()
+# plot train vs test loss
+plt.plot(hist.history['loss'])
+plt.plot(hist.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Training loss', 'Testing loss'], loc='upper right')
 plt.show()
 
 
 # create confusion matrix
+# https://medium.com/@francesca_lim/twitter-u-s-airline-sentiment-analysis-using-keras-and-rnns-1956f42294ef
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 # predicted values
@@ -172,7 +194,7 @@ for i in range(0, y_test.shape[0]):
     label_predict = np.argmax(y_test[i])
     y_test_array[i] = label_predict
 y_test_array = y_test_array.astype(int)
-class_names = np.array(['negative', 'positive', 'neutral'])
+class_names = np.array(['negative', 'neutral', 'positive'])
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
                           title=None,
@@ -227,14 +249,7 @@ plot_confusion_matrix(y_test_array, y_pred_array, classes=class_names, normalize
 # print plot
 plt.show()
 
-# saving the model
-# serialize model to JSON
-json_file = lstm_model.to_json()
-with open("model.json", "w") as file:
-   file.write(json_file)
-# serialize model weights to HDF5
-lstm_model.save_weights("model_weights.hdf5")
-# save tokenizer
-import pickle
-with open('tokenizer.pickle', 'wb') as handle:
-     pickle.dump(t, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+

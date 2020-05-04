@@ -1,3 +1,5 @@
+# this tutorial has been a learning resource
+# https://pythonprogramming.net/twitter-stream-sentiment-analysis-python/
 from keras.models import model_from_json
 import pickle
 import re
@@ -12,7 +14,6 @@ import time
 
 sqlite3.register_adapter(np.int64, int)
 sqlite3.register_adapter(np.int32, int)
-
 
 # load saved json model
 file = open("model.json", 'r')
@@ -45,22 +46,25 @@ def create_table():
 create_table()
 
 # stream tweets
-class listener(StreamListener):
-    def on_data(self, data):
+class Mylistener(StreamListener):
+    def on_status(self, status):
         try:
-            data = json.loads(data)
-            tweet = data['text']
-            time_ms = data['timestamp_ms']
-            # data preprocessing
-            tweet = re.sub("@[\w]*", '', tweet)
-            # Remove punctuations and numbers
-            tweet = re.sub('[^a-zA-Z]', ' ', tweet)
-            # Single character removal
-            tweet = re.sub(r"\s+[a-zA-Z]\s+", ' ', tweet)
-            # Removing multiple spaces
-            tweet = re.sub(r'\s+', ' ', tweet)
+            # get tweet text
+            tweet = status.text
+            # get tweet time
+            time_ms = status.created_at
 
-            sequences= loaded_tokenizer.texts_to_sequences([tweet])
+            # preprocessing
+            # define patterns
+            replace = re.compile('[^a-z]')
+            multipleSpaces = re.compile('\s+')
+            singleLetter = re.compile(r"\b[a-z]\b")
+            # replace matched patterns with a space
+            tweetProcessed = replace.sub(' ', tweet)
+            tweetProcessed = singleLetter.sub(' ', tweetProcessed)
+            tweetProcessed = multipleSpaces.sub(' ', tweetProcessed)
+
+            sequences= loaded_tokenizer.texts_to_sequences([tweetProcessed])
             padded = pad_sequences(sequences, padding='post', maxlen=20)
             # use model to predict the sentiment
             sentiment = loaded_model.predict_classes(padded)[0]
@@ -77,10 +81,9 @@ class listener(StreamListener):
     def on_error(self, status):
             print(status)
 while True:
-
     try:
         # listen to all tweets in English (that have vowels)
-        twitterStream = Stream(auth, listener(), tweet_mode = "extended")
+        twitterStream = Stream(auth, Mylistener(), tweet_mode = "extended")
         twitterStream.filter(languages=["en"], track=["a","e","i","o","u"])
     except Exception as e:
         print(str(e))
