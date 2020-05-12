@@ -11,7 +11,7 @@ Two datasets were used to train the model (in BuildModel.py):
 1. corpus created by Nick Sanders (downloaded from https://github.com/karanluthra/twitter-sentiment-training/blob/master/corpus.csv)
 2. Twitter US Airline Sentiment (downloaded from Kaggle https://www.kaggle.com/crowdflower/twitter-airline-sentiment)
 
-Other files: 
-1. TwitterAPI.py was used to download the tweets by tweet ids (tweets from Nick Sanders corpus). This file needs to be run if you wish to download the dataset with tweets. Note that running this file will take a very long time. 
+Description of other files in this project: 
+1. TwitterAPI.py - used to download the tweets by tweet ids (tweets from Nick Sanders corpus). This file needs to be run if you wish to download the dataset with tweets. Note that running this file will take a very long time. 
 2. UI.py - this file contains the code for the first simple tkinter UI created for the project. Even though this UI is not used in the final version of the tool, this file was left to show the progress of the project. 
 3. Tokenizer, model, and model weights contain information about the model. Download these files so that you can run the tool. Without these files, it will be necessary to re-run BuildModel.py to create and save a new model. 
