@@ -77,11 +77,11 @@ def update_result(resupdate):
         rows = len(df.index)
         if rows != 0:
             res = total / rows
-            return "Average Sentiment Score is: {}".format(res)
+            return "Average Sentiment Score is: {}".format(res) + "   (0 = negative, 1 = neutral, 2 = positive)"
         else:
-            return "No Score to Display"
+            return "No Score to Display. Please enter a different search keyword"
     else:
-        return "No Score to Display"
+        return "No Score to Display. Please enter a different search keyword"
 
 
 # on click of submit button static tab
@@ -117,10 +117,10 @@ def update_result(n_intervals, sentiment_term2):
         # if there are tweets matching the keyword
         if num != 0:
             res = total/num
-            return "Average Sentiment Score is: {:.1f}".format(res)
+            return "Average Sentiment Score is: {:.1f}".format(res) + "   (0 = negative, 1 = neutral, 2 = positive)"
         # if there are no tweets matching the keyword
         else:
-            return "No Score to Display"
+            return "No Score to Display. Please enter a different search keyword"
 
 # update live scatter plot
 @app.callback(Output('live-graph', 'figure'),
@@ -162,10 +162,9 @@ def update_graph_scatter(n, sentiment_term2):
                     'line': {'width': 0.5, 'color': 'white'}
                 }
             )
-            return {'data': [data], 'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]),
+            return {'data': [data], 'layout': go.Layout(title = 'Live Scatter Plot', xaxis=dict(range=[min(X), max(X)]),
                                                     yaxis=dict(range=[min(Y)-0.1, max(Y)+0.1]),
-                                                        margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
-                                                        legend={'x': 0, 'y': 1},
+                                                        margin={'l': 40, 'b': 40, 't': 40, 'r': 20},
                                                             hovermode='closest' )}
         else:
             return {'data': []}
@@ -195,7 +194,7 @@ def update_pie_chart(n, sentiment_term2):
                        textfont=dict(size=20),
                        marker=dict(colors=colors,
                                    line=dict(color='#000000', width=2)))
-        return {'data': [trace], 'layout': go.Layout(title = 'Pie Chart'
+        return {'data': [trace], 'layout': go.Layout(title = 'Live Pie Chart'
                                                     )}
     # if datafrane is empty return empty graph
     else:
@@ -214,10 +213,10 @@ def update_static_pie_chart(sentiment_term):
     colors = ['#FF535D', '#C9CBCB', '#90FA75']
     # count how many negative, neutral and positive labels there are
     counter = collections.Counter(pred)
-    values = [counter[0.0], counter[1.0], counter[2.0]]
+    values = [counter[0], counter[1], counter[2]]
     # make sure that the predictions exist
     # the predictions will not exist if there were no tweets matching the keyword
-    if pred != []:
+    if values != []:
         trace = go.Pie(labels=labels, values=values,
                        hoverinfo='label+percent', textinfo='value',
                        textfont=dict(size=20),
@@ -258,10 +257,9 @@ def update_graph_scatter(self):
         # make sure the dataframe is not empty
         # it will be empty if there are no tweets matching the keyword
         if (df.empty == False):
-            return {'data': [data], 'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]),
+            return {'data': [data], 'layout': go.Layout(title = 'Static Scatter Plot', xaxis=dict(range=[min(X), max(X)]),
                                                                 yaxis=dict(range=[min(Y) - 0.1, max(Y) + 0.1]),
-                                                                margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
-                                                                legend={'x': 0, 'y': 1},
+                                                                margin={'l': 40, 'b': 40, 't': 40, 'r': 20},
                                                                 hovermode='closest')}
         else:
             # if the search keyword returned no results - scored.csv is empty
@@ -319,17 +317,17 @@ def static_analysis(sentiment):
     # create empty lists where tweets texts and time will be saved
     tweet_list = [];
     tweet_time = [];
-    for tweet_info in tweepy.Cursor(api.search, q=search_word, lang="en",
+    for tweet_object in tweepy.Cursor(api.search, q=search_word, lang="en",
                                     tweet_mode="extended").items(100):
         # if it is a retweet
-        if "retweeted_status" in dir(tweet_info):
-            tweet = tweet_info.retweeted_status.full_text
+        if "retweeted_status" in dir(tweet_object):
+            tweet = tweet_object.retweeted_status.full_text
             tweet_list.append(tweet)
-            tweet_time.append(tweet_info.created_at)
+            tweet_time.append(tweet_object.created_at)
         else:
-            tweet = tweet_info.full_text
+            tweet = tweet_object.full_text
             tweet_list.append(tweet)
-            tweet_time.append(tweet_info.created_at)
+            tweet_time.append(tweet_object.created_at)
     df_tweets["text"] = tweet_list
     df_tweets["time"] = tweet_time
     # preprocessing
