@@ -1,4 +1,4 @@
-Sentiment Tool analyses the sentiment of tweets mentioning a certain keyword.
+Sentiment Tracker analyses the sentiment of tweets mentioning a certain keyword.
 It uses LSTM neural network to perform the sentiment analysis and Dash (Python framework) to display the results and to receive the input keyword.
 To run the tool, you need to run two files simultaneously. Run SentimentAnalysis.py, wait for a few seconds (until you see tweets displayed in your terminal), then run test.py. 
 Click on the link that will appear in your terminal window after you start running test.py. This will take you to the dashboard.
